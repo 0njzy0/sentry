@@ -2,14 +2,14 @@ from __future__ import absolute_import
 from time import time
 
 from django.utils.translation import ugettext as _
-from sentry.integrations import Integration, IntegrationProvider, IntegrationMetadata
+from sentry.integrations import Integration, IntegrationFeatures, IntegrationProvider, IntegrationMetadata
 from sentry.integrations.exceptions import ApiError
-from .client import VstsApiClient
+from sentry.integrations.vsts.issues import VstsIssueSync
 from sentry.pipeline import NestedPipelineView
 from sentry.identity.pipeline import IdentityProviderPipeline
 from sentry.identity.vsts import VSTSIdentityProvider
 from sentry.utils.http import absolute_uri
-
+from .client import VstsApiClient
 from .repository import VstsRepositoryProvider
 DESCRIPTION = """
 VSTS
@@ -25,7 +25,7 @@ metadata = IntegrationMetadata(
 )
 
 
-class VstsIntegration(Integration):
+class VstsIntegration(Integration, VstsIssueSync):
     def __init__(self, *args, **kwargs):
         super(VstsIntegration, self).__init__(*args, **kwargs)
         self.default_identity = None
@@ -83,6 +83,17 @@ class VstsIntegration(Integration):
             },
         ]
 
+    @property
+    def instance(self):
+        return self.model.metadata['domain_name']
+
+    @property
+    def default_project(self):
+        try:
+            return self.model.metadata['default_project']
+        except KeyError:
+            return None
+
 
 class VstsIntegrationProvider(IntegrationProvider):
     key = 'vsts'
@@ -93,6 +104,7 @@ class VstsIntegrationProvider(IntegrationProvider):
     needs_default_identity = True
     integration_cls = VstsIntegration
     can_add_project = True
+    features = frozenset([IntegrationFeatures.ISSUE_SYNC])
 
     setup_dialog_config = {
         'width': 600,
