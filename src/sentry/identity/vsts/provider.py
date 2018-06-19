@@ -19,6 +19,7 @@ class VSTSIdentityProvider(OAuth2Provider):
 
     oauth_scopes = (
         'vso.code',
+        'vso.graph',
         'vso.project',
         'vso.release',
         'vso.serviceendpoint_manage',
