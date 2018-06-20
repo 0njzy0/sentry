@@ -134,6 +134,9 @@ class GitHubIntegrationProvider(IntegrationProvider):
         return {
             'name': installation['account']['login'],
             'external_id': installation['id'],
+            # GitHub identity is associated directly to the application, *not*
+            # to the installation itself.
+            'idp_external_id': installation['app_id'],
             'metadata': {
                 # The access token will be populated upon API usage
                 'access_token': None,
